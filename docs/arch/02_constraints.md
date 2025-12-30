@@ -22,7 +22,7 @@ These are the constraints that are possibly true.
 
 | #       | Constraint          | Background        |
 |---------|---------------------|-------------------|
-| TC3     | Probably Node.js + Vue + Vuetify stack | This stack offers nice UI looks. Also both devs have some experience with it. |
+| TC3     | Probably Nuxt.js + Vuetify/NuxtUI stack | This stack offers nice UI looks. Also both devs have some experience with it. |
 | TC4     | Single room must support up to at least 10 clients (including Host/DM) | This is the maximum number of players in DnD (plus margin) |
 
 ## Unknown Constraints

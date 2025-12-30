@@ -11,7 +11,7 @@ For real-time audio streaming with sub-second latency [mediasoup](https://github
 
 In order to improve modularity, the system should be decomposed into Scene Composer, Audio Mixer and Audio Streamer. Audio Streamer should receive already mixed stream as input and broadcast it to all connected clients. This way we can separate the most technically complex part (streaming) from the UI and audio mixing.
 
-It is expected that the whole project can be done entirely inside one Node.js package without need to write any native code or using any external services.
+It is expected that the whole project can be done entirely inside one Nuxt.js project without need to write any native code or using any external services.
 
 To keep everything simple, the web-service will only provide two pages: one for the DM and one for the players. DM's page is a superset of player's page. Both pages broadcast audio mix and allow to configure playback volume, but DM's page has controls for scene composition and control, while player's page does not.
 
