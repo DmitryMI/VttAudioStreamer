@@ -1,6 +1,6 @@
 ---
 date: December 2025
-title: "![arc42](images/arc42-logo.png) VTT Audio Streamer - Architecture Constraints"
+title: "VTT Audio Streamer - Architecture Constraints"
 ---
 
 # Constraints
@@ -31,4 +31,13 @@ These are the constraints that are questionable.
 
 | #       | Constraint          | Background        |
 |---------|---------------------|-------------------|
+
+## Conventions
+
+| #       | Convention          | Background        |
+|---------|---------------------|-------------------|
+| C1      | Architecture Documentation | Structure based on english arc42-template in version 9.0 |
+| C2      | Coding conventions | *To be defined* |
+| C3      | Development Language | English |
+=======
 | TC5     | Single room should be stand-alone web-server, runnable without login infrastructure | Ability to run a single room inside custom VPN/LAN environment without need to create user accounts, routing and proxies will simplify end-user setup workload. |

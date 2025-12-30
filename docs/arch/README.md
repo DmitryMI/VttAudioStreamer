@@ -1,6 +1,6 @@
 ---
 date: December 2025
-title: "![arc42](images/arc42-logo.png) VTT Audio Streamer - Architecture"
+title: "VTT Audio Streamer - Architecture"
 ---
 
 # VTT Audio Streamer - Architecture
@@ -23,10 +23,10 @@ contributors. See <https://arc42.org>.
 3. [System Scope and Context](03_context.md)
 4. [Solution Strategy](04_solution_strategy.md)
 5. [Building Block View](05_building_blocks.md)
-6. [Runtime View](06_runtime.md)
-7. [Deployment View](07_deployment.md)
-8. [Cross-cutting Concepts](08_crosscutting.md)
-9. [Architecture Decisions](09_decisions.md)
-10. [Quality Requirements](10_quality.md)
-11. [Risks and Technical Debt](11_risks.md)
-12. [Glossary](12_glossary.md)
+6. TODO [Runtime View](06_runtime.md)
+7. TODO [Deployment View](07_deployment.md)
+8. TODO [Cross-cutting Concepts](08_crosscutting.md)
+9. TODO [Architecture Decisions](09_decisions.md)
+10. TODO [Quality Requirements](10_quality.md)
+11. TODO [Risks and Technical Debt](11_risks.md)
+12. TODO [Glossary](12_glossary.md)
