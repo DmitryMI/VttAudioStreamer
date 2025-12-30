@@ -1,6 +1,6 @@
 ---
 date: December 2025
-title: "![arc42](images/arc42-logo.png) VTT Audio Streamer - Architecture Introduction"
+title: "VTT Audio Streamer - Architecture Introduction"
 ---
 
 # Introduction and Goals
