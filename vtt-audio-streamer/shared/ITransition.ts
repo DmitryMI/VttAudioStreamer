@@ -1,4 +1,4 @@
-import type {IFade} from "#shared/domain/IFade";
+import type {IFade} from "#shared/IFade";
 
 /**
  * Defines how one scene transitions to another.

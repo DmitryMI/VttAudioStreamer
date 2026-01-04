@@ -1,5 +1,5 @@
-import type {IAudioTrack} from "#shared/domain/IAudioTrack";
-import type {Volume} from "#shared/domain/Volume";
+import type {IAudioTrack} from "#shared/IAudioTrack";
+import type {Volume} from "#shared/Volume";
 
 /**
  * Container for audio tracks
