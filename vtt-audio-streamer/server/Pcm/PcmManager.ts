@@ -1,0 +1,58 @@
+import {IPcm, PcmId} from "#shared/Pcm/IPcm";
+import {IPcmManager} from "#shared/Pcm/IPcmManager";
+import type {IPcmInfo} from "#shared/Pcm/IPcmInfo";
+import {IDependencyManager} from "#shared/IDependencyManager";
+import {Pcm} from "~~/server/Pcm/Pcm";
+import {PcmInfo} from "~~/server/Pcm/PcmInfo";
+
+export class PcmManager implements IPcmManager {
+
+    constructor(dependencyManager: IDependencyManager) {
+        this.dependencyManager = dependencyManager;
+        this.pcmEntries = [];
+    }
+
+    async getPcms(): Promise<IPcm[]>{
+        return this.pcmEntries;
+    }
+
+    async createPcm(name: string, info: IPcmInfo, samples: Float32Array): Promise<IPcm>{
+        let id: PcmId = crypto.randomUUID() as PcmId;
+        const durationMs = Pcm.calculateDurationMs(samples.length, info);
+        return new Pcm(id, name, info, 0, durationMs, samples);
+    }
+
+    async findPcm(id: PcmId): Promise<IPcm>{
+        for(let pcm of this.pcmEntries) {
+            if(pcm.id == id){
+                return pcm;
+            }
+        }
+        throw new Error(`PCM with id ${id} not found`);
+    }
+
+    async savePcm(pcm: IPcm): Promise<void>{
+        const persistence = this.dependencyManager.getPcmPersistence();
+        await persistence.savePcm(pcm);
+    }
+
+    async init(): Promise<void> {
+        let entries = [];
+        const persistence = this.dependencyManager.getPcmPersistence();
+        const ids = await persistence.getSavedPcmIds();
+        for(const pcmId of ids){
+            let pcm: Pcm = new Pcm(pcmId, "", new PcmInfo(0, 0), 0, 0, new Float32Array(0));
+            await persistence.loadPcm(pcm);
+            pcm.durationMs = Pcm.calculateDurationMs(pcm.getFullTrackSamples().length, pcm.pcmInfo);
+            entries.push(pcm);
+        }
+        this.pcmEntries = entries;
+    }
+
+    getDefaultPcmInfo(): IPcmInfo{
+        return new PcmInfo(44100, 2);
+    }
+
+    private readonly dependencyManager: IDependencyManager;
+    private pcmEntries: Pcm[];
+}
