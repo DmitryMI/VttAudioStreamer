@@ -13,16 +13,31 @@ export class PcmManager implements IPcmManager {
     }
 
     async getPcms(): Promise<IPcm[]>{
+        if(!this.initComplete){
+            throw new Error("init() must be called before using PcmManager");
+        }
         return this.pcmEntries;
     }
 
     async createPcm(name: string, info: IPcmInfo, samples: Float32Array): Promise<IPcm>{
+        if(!this.initComplete){
+            throw new Error("init() must be called before using PcmManager");
+        }
+
         let id: PcmId = crypto.randomUUID() as PcmId;
         const durationMs = Pcm.calculateDurationMs(samples.length, info);
-        return new Pcm(id, name, info, 0, durationMs, samples);
+        let pcm: Pcm = new Pcm(id, name, info, 0, durationMs, samples);
+        this.pcmEntries.push(pcm);
+        await this.savePcm(pcm);
+        console.log(`Created Pcm: ${pcm.id} from ${samples.length} samples`);
+        return pcm;
     }
 
     async findPcm(id: PcmId): Promise<IPcm>{
+        if(!this.initComplete){
+            throw new Error("init() must be called before using PcmManager");
+        }
+
         for(let pcm of this.pcmEntries) {
             if(pcm.id == id){
                 return pcm;
@@ -32,6 +47,10 @@ export class PcmManager implements IPcmManager {
     }
 
     async savePcm(pcm: IPcm): Promise<void>{
+        if(!this.initComplete){
+            throw new Error("init() must be called before using PcmManager");
+        }
+
         const persistence = this.dependencyManager.getPcmPersistence();
         await persistence.savePcm(pcm);
     }
@@ -47,12 +66,18 @@ export class PcmManager implements IPcmManager {
             entries.push(pcm);
         }
         this.pcmEntries = entries;
+        this.initComplete = true;
     }
 
     getDefaultPcmInfo(): IPcmInfo{
+        if(!this.initComplete){
+            throw new Error("init() must be called before using PcmManager");
+        }
+
         return new PcmInfo(44100, 2);
     }
 
     private readonly dependencyManager: IDependencyManager;
+    private initComplete: boolean = false;
     private pcmEntries: Pcm[];
 }

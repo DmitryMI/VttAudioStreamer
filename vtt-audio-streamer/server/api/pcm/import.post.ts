@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
 
     const parts = await readMultipartFormData(event);
 
-    const audioImporter: IAudioImporter = getDependencyManager().getAudioImporter();
+    const audioImporter: IAudioImporter = (await getDependencyManager()).getAudioImporter();
 
     if(!parts?.length) {
         throw createError({statusCode: 400, statusMessage: 'Nothing received'})

@@ -1,6 +1,7 @@
 import {IAudioImporter} from "#shared/IAudioImporter";
 import type {PcmId} from "#shared/Pcm/IPcm";
 import {IDependencyManager} from "#shared/IDependencyManager";
+import type {IAudioConversionSession} from "#shared/AudioConversion/IAudioConversionSession";
 
 export class AudioImporter implements IAudioImporter {
 
@@ -57,14 +58,40 @@ export class AudioImporter implements IAudioImporter {
         const pcmManager = this.dependencyManager.getPcmManager();
         const audioConverter = this.dependencyManager.getAudioConverter();
 
-        let convertedData = await audioConverter.convertToPcm(data, mimeType, pcmManager.getDefaultPcmInfo(), onProgress);
-        let convertedDataReader = convertedData.getReader();
-        let read = await convertedDataReader.read();
-        let convertedDataArray = read.value;
-        if(!convertedDataArray){
-            throw new Error("Could not convert data array");
-        }
-        return (await pcmManager.createPcm(fileName, pcmManager.getDefaultPcmInfo(), convertedDataArray)).id;
+        return await new Promise<PcmId>((resolve, reject) => {
+            const conversionSession: IAudioConversionSession =
+                audioConverter.createPcmConversionSession(
+                    data,
+                    mimeType,
+                    pcmManager.getDefaultPcmInfo(),
+                    async (session: IAudioConversionSession) => {
+                        try {
+                            if (!session.isDone()) {
+                                reject(new Error("Session is not done, but callback was called"));
+                            }
+
+                            const error = session.getError()
+                            if (error) {
+                                reject(error)
+                                return
+                            }
+
+                            const result = session.getResult()
+                            if (!result) {
+                                reject(new Error("Conversion result is null"))
+                                return
+                            }
+
+                            const pcm = await pcmManager.createPcm(fileName, pcmManager.getDefaultPcmInfo(), result)
+                            console.log("processUpload() resulted in new PCM with ID: " + pcm.id)
+                            resolve(pcm.id)
+                        } catch (err) {
+                            reject(err)
+                        }
+                    }
+                )
+
+        });
     }
 
     private readonly dependencyManager: IDependencyManager;

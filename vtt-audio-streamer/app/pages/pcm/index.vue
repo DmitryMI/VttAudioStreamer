@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-	import {ref, onMounted} from "vue"
+	import {onMounted, ref} from "vue"
 	import AudioUploader from "../../../components/AudioUploader.vue";
 	import type {IPcm} from "#shared/Pcm/IPcm";
 
@@ -79,17 +79,10 @@
 	const uploadDialog = ref(false)
 
 	async function loadPcmEntries() {
+		console.log("loadPcmEntries()")
 		loading.value = true
 		try {
-			let {data, error} = await useFetch<IPcm[]>("/api/pcm/list")
-			if (error.value) {
-				console.error("Failed to fetch PCM list:", error.value)
-				return
-			}
-
-			if (data.value) {
-				pcmEntriesRef.value = data.value
-			}
+			pcmEntriesRef.value = await $fetch<IPcm[]>("/api/pcm/list")
 
 		} finally {
 			loading.value = false

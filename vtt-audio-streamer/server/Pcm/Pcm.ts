@@ -42,8 +42,11 @@ export class Pcm implements IPcm {
      */
     getSamples(): Float32Array{
         const firstSampleIndex = this.startMs * this.pcmInfo.sampleRate * this.pcmInfo.channels;
-        const samplesNum = this.durationMs * this.pcmInfo.sampleRate * this.pcmInfo.channels;
-        console.assert(samplesNum <= this.pcmSamples.length);
+        let samplesNum = this.durationMs * this.pcmInfo.sampleRate * this.pcmInfo.channels;
+        if(samplesNum >= this.pcmSamples.length){
+            samplesNum = this.pcmSamples.length;
+        }
+
         let subArray = new Float32Array(samplesNum);
 
         for(let i = firstSampleIndex; i <= samplesNum; ++i) {

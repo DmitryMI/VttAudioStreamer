@@ -1,5 +1,5 @@
 import type {IDependencyManager} from "#shared/IDependencyManager";
-import type {IAudioConverter} from "#shared/IAudioConverter";
+import type {IAudioConverter} from "#shared/AudioConversion/IAudioConverter";
 import type {IAudioMixer} from "#shared/IAudioMixer";
 import type {IAudioImporter} from "#shared/IAudioImporter";
 import type{IPcmManager} from "#shared/Pcm/IPcmManager";
@@ -7,7 +7,7 @@ import  type{IPcmPersistence} from "#shared/Persistence/IPcmPersistence";
 import {PcmPersistence} from "~~/server/Persistence/PcmPersistence";
 import {PcmManager} from "~~/server/Pcm/PcmManager";
 import {AudioImporter} from "~~/server/AudioImporter";
-import {AudioConverter} from "~~/server/AudioConverter";
+import {AudioConverter} from "~~/server/AudioConversion/AudioConverter";
 
 export class DependencyManager implements IDependencyManager {
 
@@ -47,11 +47,17 @@ export class DependencyManager implements IDependencyManager {
 
     private readonly pcmManager: IPcmManager;
     private readonly pcmPersistence: IPcmPersistence;
+
 }
 
+let initComplete = false;
 const dependencyManager: DependencyManager = new DependencyManager();
 
-export function getDependencyManager(): IDependencyManager{
+export async function getDependencyManager(): Promise<IDependencyManager>{
+    if(!initComplete){
+        await dependencyManager.getPcmManager().init();
+        initComplete = true;
+    }
     return dependencyManager;
 }
 
