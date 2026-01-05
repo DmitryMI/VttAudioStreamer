@@ -58,6 +58,9 @@
 	const progress = ref(0)
 	const phase = ref<"idle" | "upload" | "convert" | "done" | "failed">("idle")
 	const error = ref<string | null>(null)
+	const emit = defineEmits<{
+		(e: 'completed'): void
+	}>()
 
 	let eventSource: EventSource | null = null
 
@@ -134,6 +137,7 @@
 					phase.value = "done"
 				}
 				eventSource?.close()
+				emit("completed")
 			}
 		}
 

@@ -20,8 +20,9 @@
 				<template #headers>
 					<tr>
 						<th>Name</th>
+						<th>Artist</th>
+						<th>Title</th>
 						<th>Duration</th>
-						<th>Uploaded</th>
 					</tr>
 				</template>
 
@@ -29,20 +30,19 @@
 					<tr>
 						<td>
 							<v-icon size="18" class="mr-2">mdi-music</v-icon>
-							{{ item.name }}
+							{{ item.info.fileName }}
+						</td>
+						<td>
+							<v-icon size="18" class="mr-2">mdi-music</v-icon>
+							{{ item.info.artist }}
 						</td>
 
 						<td>
-              <span v-if="item.duration">
-                {{ Math.round(item.duration) }} s
-              </span>
-							<span v-else class="text-disabled">
-                —
-              </span>
+							<v-icon size="18" class="mr-2">mdi-music</v-icon>
+							{{ item.info.title }}
 						</td>
-
 						<td>
-							{{ new Date(item.createdAt).toLocaleString() }}
+							{{ formatMs(item.info.durationMs) }}
 						</td>
 					</tr>
 				</template>
@@ -65,16 +65,15 @@
 <script setup lang="ts">
 	import {onMounted, ref} from "vue"
 	import AudioUploader from "../../../components/AudioUploader.vue";
-	import type {IPcm} from "#shared/Pcm/IPcm";
+	import type {PcmId} from "#shared/Pcm/IPcm";
+	import type {IPcmInfo} from "#shared/Pcm/IPcmInfo";
 
-	interface UploadedAudio {
-		id: string
-		name: string
-		duration?: number
-		createdAt: string
+	interface PcmEntry {
+		id: PcmId
+		info: IPcmInfo
 	}
 
-	const pcmEntriesRef = ref<IPcm[]>([])
+	const pcmEntriesRef = ref<PcmEntry[]>([])
 	const loading = ref(false)
 	const uploadDialog = ref(false)
 
@@ -82,7 +81,7 @@
 		console.log("loadPcmEntries()")
 		loading.value = true
 		try {
-			pcmEntriesRef.value = await $fetch<IPcm[]>("/api/pcm/list")
+			pcmEntriesRef.value = await $fetch<PcmEntry[]>("/api/pcm/list")
 
 		} finally {
 			loading.value = false
@@ -92,6 +91,21 @@
 	function onUploadFinished() {
 		uploadDialog.value = false
 		loadPcmEntries()
+	}
+
+	function formatMs(ms: number): string {
+		if (ms < 0) ms = -ms;
+		const time = {
+			day: Math.floor(ms / 86400000),
+			hour: Math.floor(ms / 3600000) % 24,
+			minute: Math.floor(ms / 60000) % 60,
+			second: Math.floor(ms / 1000) % 60,
+			millisecond: Math.floor(ms) % 1000
+		};
+		return Object.entries(time)
+			.filter(val => val[1] !== 0)
+			.map(([key, val]) => `${val} ${key}${val !== 1 ? 's' : ''}`)
+			.join(', ');
 	}
 
 	onMounted(loadPcmEntries)

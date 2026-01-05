@@ -23,6 +23,7 @@ export class AudioImporter implements IAudioImporter {
                 "audio/x-aiff",
                 "audio/basic",
                 "audio/flac",
+                "audio/x-flac",
                 "audio/midi",
                 "audio/mp4",
                 "audio/mp4a-latm",

@@ -32,6 +32,7 @@ export class AudioConverter implements IAudioConverter {
             throw new Error("reportSessionFinished() called for non-registered session")
         }
         this.sessions.splice(index, 1);
+        console.log(`Conversion session ${session.id} deleted`);
     }
 
     private readonly dependencyManager: IDependencyManager;

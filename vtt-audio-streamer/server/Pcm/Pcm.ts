@@ -20,7 +20,7 @@ export class Pcm implements IPcm {
         this.pcmSamples = pcmSamples;
 
         // FIXME This is a hack to fix duration being 0 due to ffprobe limitations.
-        if(this.info.durationMs == 0){
+        if(this.info.durationMs == 0 || isNaN(this.info.durationMs)){
             this.info.durationMs = durationMs;
         }
     }
