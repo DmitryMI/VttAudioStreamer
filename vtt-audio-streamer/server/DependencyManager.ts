@@ -7,6 +7,7 @@ import  type{IPcmPersistence} from "#shared/Persistence/IPcmPersistence";
 import {PcmPersistence} from "~~/server/Persistence/PcmPersistence";
 import {PcmManager} from "~~/server/Pcm/PcmManager";
 import {AudioImporter} from "~~/server/AudioImporter";
+import {AudioConverter} from "~~/server/AudioConverter";
 
 export class DependencyManager implements IDependencyManager {
 
@@ -14,12 +15,10 @@ export class DependencyManager implements IDependencyManager {
         this.pcmPersistence = new PcmPersistence();
         this.pcmManager = new PcmManager(this);
         this.audioImporter = new AudioImporter(this);
+        this.audioConverter = new AudioConverter(this);
     }
 
     getAudioConverter(): IAudioConverter{
-        if(!this.audioConverter){
-            throw Error("Not implemented");
-        }
         return this.audioConverter;
     }
 
@@ -42,8 +41,8 @@ export class DependencyManager implements IDependencyManager {
         return this.pcmPersistence;
     }
 
-    private readonly audioConverter?: IAudioConverter;
     private readonly audioMixer?: IAudioMixer;
+    private readonly audioConverter: IAudioConverter;
     private readonly audioImporter: IAudioImporter;
 
     private readonly pcmManager: IPcmManager;

@@ -57,10 +57,7 @@ export class AudioImporter implements IAudioImporter {
         const pcmManager = this.dependencyManager.getPcmManager();
         const audioConverter = this.dependencyManager.getAudioConverter();
 
-        const blob = new Blob([data]);
-        const stream = blob.stream();
-
-        let convertedData = await audioConverter.convertToPcm(stream, mimeType, pcmManager.getDefaultPcmInfo(), onProgress);
+        let convertedData = await audioConverter.convertToPcm(data, mimeType, pcmManager.getDefaultPcmInfo(), onProgress);
         let convertedDataReader = convertedData.getReader();
         let read = await convertedDataReader.read();
         let convertedDataArray = read.value;

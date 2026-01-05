@@ -12,7 +12,7 @@
 		<!-- File list -->
 		<v-card>
 			<v-data-table
-				:items="files"
+				:items="pcmEntriesRef"
 				:loading="loading"
 				item-key="id"
 				class="elevation-1"
@@ -57,14 +57,15 @@
 
 		<!-- Upload dialog -->
 		<v-dialog v-model="uploadDialog" max-width="520">
-			<AudioUpload @completed="onUploadFinished"/>
+			<AudioUploader @completed="onUploadFinished"/>
 		</v-dialog>
 	</v-container>
 </template>
 
 <script setup lang="ts">
 	import {ref, onMounted} from "vue"
-	import AudioUpload from "../../../components/AudioUpload.vue";
+	import AudioUploader from "../../../components/AudioUploader.vue";
+	import type {IPcm} from "#shared/Pcm/IPcm";
 
 	interface UploadedAudio {
 		id: string
@@ -73,14 +74,23 @@
 		createdAt: string
 	}
 
-	const files = ref<UploadedAudio[]>([])
+	const pcmEntriesRef = ref<IPcm[]>([])
 	const loading = ref(false)
 	const uploadDialog = ref(false)
 
-	async function loadFiles() {
+	async function loadPcmEntries() {
 		loading.value = true
 		try {
-			files.value = await useFetch<UploadedAudio[]>("/api/AudioImport/list")
+			let {data, error} = await useFetch<IPcm[]>("/api/pcm/list")
+			if (error.value) {
+				console.error("Failed to fetch PCM list:", error.value)
+				return
+			}
+
+			if (data.value) {
+				pcmEntriesRef.value = data.value
+			}
+
 		} finally {
 			loading.value = false
 		}
@@ -88,8 +98,8 @@
 
 	function onUploadFinished() {
 		uploadDialog.value = false
-		loadFiles()
+		loadPcmEntries()
 	}
 
-	onMounted(loadFiles)
+	onMounted(loadPcmEntries)
 </script>

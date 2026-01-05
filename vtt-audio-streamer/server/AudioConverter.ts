@@ -14,7 +14,7 @@ export class AudioConverter implements IAudioConverter {
 
         const args = [
             "-hide_banner",
-            "-loglevel", "info",
+            "-loglevel repeat+level+fatal",
 
             // Input from stdin
             "-i", "pipe:0",
@@ -38,24 +38,25 @@ export class AudioConverter implements IAudioConverter {
         /* -------------------------------
          * Parse progress from stderr
          * ------------------------------- */
-        if (onProgress) {
-            ffmpeg.stderr.setEncoding("utf8");
-            ffmpeg.stderr.on("data", chunk => {
-                // Example lines:
-                // time=00:00:03.21 bitrate=...
-                const match = /time=(\d+):(\d+):([\d.]+)/.exec(chunk);
-                if (!match) return;
+        ffmpeg.stderr.setEncoding("utf8");
+        ffmpeg.stderr.on("data", chunk => {
+            console.log(`[ffmpeg] ${chunk}`)
+            // Example lines:
+            // time=00:00:03.21 bitrate=...
+            const match = /time=(\d+):(\d+):([\d.]+)/.exec(chunk);
+            if (!match) return;
 
-                const [, hh, mm, ss] = match;
-                const seconds =
-                    Number(hh) * 3600 +
-                    Number(mm) * 60 +
-                    Number(ss);
+            const [, hh, mm, ss] = match;
+            const seconds =
+                Number(hh) * 3600 +
+                Number(mm) * 60 +
+                Number(ss);
 
-                // You can normalize if duration is known
+            // You can normalize if duration is known
+            if(onProgress) {
                 onProgress(seconds);
-            });
-        }
+            }
+        });
 
         return new ReadableStream<Float32Array>({
             start(controller) {

@@ -80,7 +80,7 @@
 		formData.append("file", file.value)
 
 		const xhr = new XMLHttpRequest()
-		xhr.open("POST", "/api/AudioImport")
+		xhr.open("POST", "/api/pcm/import")
 
 		// Upload progress
 		xhr.upload.onprogress = (event) => {
@@ -112,7 +112,7 @@
 		phase.value = "convert"
 		progress.value = 0
 
-		eventSource = new EventSource(`/api/AudioImport/progress?jobId=${jobId}`)
+		eventSource = new EventSource(`/api/pcm/import/progress?jobId=${jobId}`)
 
 		eventSource.onmessage = (event) => {
 			const data = JSON.parse(event.data)
