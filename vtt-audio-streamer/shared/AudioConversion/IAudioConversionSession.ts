@@ -1,10 +1,5 @@
-
 export type AudioConversionSessionId = string & { readonly __brand: "AudioConversionSessionId" };
 
-
-/**
- * Permanently stores uploaded files
- */
 export interface IAudioConversionSession {
     readonly id: AudioConversionSessionId;
 

@@ -1,6 +1,6 @@
 import {IDependencyManager} from "#shared/IDependencyManager";
 import {IAudioConverter} from "#shared/AudioConversion/IAudioConverter";
-import type {IPcmInfo} from "#shared/Pcm/IPcmInfo";
+import type {IPcmFormat} from "#shared/Pcm/IPcmFormat";
 import type {AudioConversionSessionId, IAudioConversionSession} from "#shared/AudioConversion/IAudioConversionSession";
 import {AudioConversionSession} from "~~/server/AudioConversion/AudioConversionSession";
 
@@ -10,14 +10,14 @@ export class AudioConverter implements IAudioConverter {
         this.dependencyManager = dependencyManager;
     }
 
-    createPcmConversionSession(data: Uint8Array, sourceMimeType: string, targetPcmInfo: IPcmInfo, completionCallback: (session: IAudioConversionSession)=>void): IAudioConversionSession{
+    createPcmConversionSession(data: Uint8Array, sourceMimeType: string, targetPcmInfo: IPcmFormat, completionCallback: (session: IAudioConversionSession)=>void): IAudioConversionSession{
         const sessionId = crypto.randomUUID() as AudioConversionSessionId;
         const session = new AudioConversionSession(sessionId, this, completionCallback, data, sourceMimeType, targetPcmInfo);
         this.sessions.push(session);
         return session;
     }
 
-    getSessionById(id: AudioConversionSessionId): IAudioConversionSession | null{
+    getAudioConversionSessionById(id: AudioConversionSessionId): IAudioConversionSession | null{
         for(const session of this.sessions){
             if(session.id === id){
                 return session;

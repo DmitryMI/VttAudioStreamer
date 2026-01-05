@@ -52,10 +52,11 @@
 
 <script setup lang="ts">
 	import { ref, computed, onBeforeUnmount } from "vue"
+	import {AudioImportingProgress} from "#shared/AudioImporting/AudioImportingProgress";
 
 	const file = ref<File | null>(null)
 	const progress = ref(0)
-	const phase = ref<"idle" | "upload" | "convert" | "done">("idle")
+	const phase = ref<"idle" | "upload" | "convert" | "done" | "failed">("idle")
 	const error = ref<string | null>(null)
 
 	let eventSource: EventSource | null = null
@@ -80,7 +81,7 @@
 		formData.append("file", file.value)
 
 		const xhr = new XMLHttpRequest()
-		xhr.open("POST", "/api/pcm/import")
+		xhr.open("POST", "/api/pcm/import/upload")
 
 		// Upload progress
 		xhr.upload.onprogress = (event) => {
@@ -97,7 +98,8 @@
 			}
 
 			const response = JSON.parse(xhr.responseText)
-			startSse(response.jobId)
+			console.log(response)
+			startSse(response)
 		}
 
 		xhr.onerror = () => {
@@ -108,22 +110,29 @@
 		xhr.send(formData)
 	}
 
-	function startSse(jobId: string) {
+	function startSse(audioImportSessionIds: string[]) {
+		// TODO Handle multi-file uploads
+		const sessionId = audioImportSessionIds[0]
+
 		phase.value = "convert"
 		progress.value = 0
 
-		eventSource = new EventSource(`/api/pcm/import/progress?jobId=${jobId}`)
+		eventSource = new EventSource(`/api/pcm/import/progress?audioImportSessionId=${sessionId}`)
 
 		eventSource.onmessage = (event) => {
 			const data = JSON.parse(event.data)
 
-			if (typeof data.progress === "number") {
-				progress.value = data.progress
-			}
+			const progressReport = data as AudioImportingProgress
+			progress.value = progressReport.progress
 
-			if (data.stage === "done") {
+			if(progressReport.isDone){
 				progress.value = 100
-				phase.value = "done"
+				if(progressReport.hasError){
+					phase.value = "failed"
+				}
+				else{
+					phase.value = "done"
+				}
 				eventSource?.close()
 			}
 		}

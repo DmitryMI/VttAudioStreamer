@@ -1,6 +1,21 @@
 import {IPcmPersistence} from "#shared/Persistence/IPcmPersistence";
 import type {IPcm, PcmId} from "#shared/Pcm/IPcm";
 import { useStorage } from '#imports';
+import type {IPcmInfo} from "#shared/Pcm/IPcmInfo";
+import type {IPcmFormat} from "#shared/Pcm/IPcmFormat";
+
+class PcmMetadata{
+    name: string
+    info: IPcmInfo
+    format: IPcmFormat
+
+    constructor(name:string, info: IPcmInfo, format: IPcmFormat) {
+        this.name = name;
+        this.info = info;
+        this.format = format;
+    }
+}
+
 
 export class PcmPersistence implements IPcmPersistence {
 
@@ -23,23 +38,14 @@ export class PcmPersistence implements IPcmPersistence {
 
     async loadPcm(pcm: IPcm): Promise<void>{
         const storage = useStorage("pcm");
-        let name = await storage.getItem<string>(`${pcm.id}:name`);
-        if (!name) {
+
+        let metadata: PcmMetadata | null = await storage.getItem<PcmMetadata>(`${pcm.id}:metadata`);
+        if (!metadata) {
             throw new Error(`Could not load PCM with id ${pcm.id}.`);
         }
-        pcm.name = name;
-
-        let sampleRate = await storage.getItem<number>(`${pcm.id}:sampleRate`);
-        if (!sampleRate) {
-            throw new Error(`Could not load PCM with id ${pcm.id}`);
-        }
-        pcm.pcmInfo.sampleRate = sampleRate;
-
-        let channels = await storage.getItem<number>(`${pcm.id}:channels`);
-        if (!channels) {
-            throw new Error(`Could not load PCM with id ${pcm.id}`);
-        }
-        pcm.pcmInfo.channels = channels;
+        pcm.name = metadata.name;
+        pcm.format = metadata.format;
+        pcm.info = metadata.info;
 
         let samples = await storage.getItemRaw<Float32Array>(`${pcm.id}:samples`);
         if (!samples) {
@@ -50,9 +56,13 @@ export class PcmPersistence implements IPcmPersistence {
 
     async savePcm(pcm: IPcm): Promise<void>{
         const storage = useStorage("pcm");
-        await storage.setItem(`${pcm.id}:name`, pcm.name);
-        await storage.setItem(`${pcm.id}:sampleRate`, pcm.pcmInfo.sampleRate);
-        await storage.setItem(`${pcm.id}:channels`, pcm.pcmInfo.channels);
+        await storage.setItem(`${pcm.id}:metadata`,
+            {
+                name: pcm.name,
+                info: pcm.info,
+                format: pcm.format
+            }
+        );
         await storage.setItemRaw(`${pcm.id}:samples`, pcm.getSamples());
 
         let keys = await storage.getItem<PcmId[]>("ids");
@@ -82,9 +92,7 @@ export class PcmPersistence implements IPcmPersistence {
         keys.splice(index, 1);
         await storage.setItem(`ids`, keys);
 
-        await storage.removeItem(`${pcmId}:name`);
-        await storage.removeItem(`${pcmId}:sampleRate`);
-        await storage.removeItem(`${pcmId}:channels`);
+        await storage.removeItem(`${pcmId}:metadata`);
         await storage.removeItem(`${pcmId}:samples`);
     }
 }

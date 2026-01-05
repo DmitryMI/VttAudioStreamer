@@ -1,13 +1,10 @@
 // https://dev.to/blamsa0mine/building-a-secure-file-upload-api-with-nuxt-3-complete-implementation-guide-11ac
 
 import {getDependencyManager} from "~~/server/DependencyManager";
-import {IAudioImporter} from "#shared/IAudioImporter";
-import {PcmId} from "#shared/Pcm/IPcm";
+import {IAudioImporter} from "#shared/AudioImporting/IAudioImporter";
+import type {AudioImportingSessionId} from "#shared/AudioImporting/IAudioImportingSession";
 
 export default defineEventHandler(async (event) => {
-    const serverSentEvent = (data: any) => {
-        event.node.res.write(`data: ${JSON.stringify(data)}\n\n`)
-    }
 
     const parts = await readMultipartFormData(event);
 
@@ -22,7 +19,7 @@ export default defineEventHandler(async (event) => {
         throw createError({ statusCode: 400, statusMessage: 'Missing files' })
     }
 
-    let pcmIds: PcmId[] = [];
+    let sessionIds: AudioImportingSessionId[] = [];
 
     for(const p of files){
         const { filename = "file", type, data } = p;
@@ -40,9 +37,9 @@ export default defineEventHandler(async (event) => {
             throw createError({ statusCode: 413, statusMessage: 'File is too large.' })
         }
 
-        let pcmId = await audioImporter.processUpload(filename, type, data, (progress: number) => {serverSentEvent({file: filename, progress: progress})})
-        pcmIds.push(pcmId);
+        let sessionId = audioImporter.createAudioUploadingSession(filename, type, data).id;
+        sessionIds.push(sessionId);
     }
 
-    return pcmIds;
+    return sessionIds;
 })

@@ -1,20 +1,28 @@
 import {IPcm, PcmId} from "#shared/Pcm/IPcm";
-import {IPcmInfo} from "#shared/Pcm/IPcmInfo";
+import {IPcmFormat} from "#shared/Pcm/IPcmFormat";
+import type {IPcmInfo} from "#shared/Pcm/IPcmInfo";
 
 export class Pcm implements IPcm {
     public id: PcmId;
     public name: string;
-    public pcmInfo: IPcmInfo;
+    public info: IPcmInfo;
+    public format: IPcmFormat;
     public startMs: number;
     public durationMs: number;
 
-    constructor(id: PcmId, name:string, info: IPcmInfo, startMs: number, durationMs: number, pcmSamples: Float32Array) {
+    constructor(id: PcmId, name:string, format: IPcmFormat, info: IPcmInfo, startMs: number, durationMs: number, pcmSamples: Float32Array) {
         this.id = id;
         this.name = name;
-        this.pcmInfo = info;
+        this.format = format;
+        this.info = info;
         this.startMs = startMs;
         this.durationMs = durationMs;
         this.pcmSamples = pcmSamples;
+
+        // FIXME This is a hack to fix duration being 0 due to ffprobe limitations.
+        if(this.info.durationMs == 0){
+            this.info.durationMs = durationMs;
+        }
     }
 
     getFullTrackSamples(): Float32Array {
@@ -25,7 +33,7 @@ export class Pcm implements IPcm {
      * Returns IPcm instance representing the whole track.
      */
     getFullTrack(): IPcm{
-        return new Pcm(this.id, name, this.pcmInfo, 0, this.getFullTrackDurationMs(), this.pcmSamples)
+        return new Pcm(this.id, name, this.format, this.info, 0, this.getFullTrackDurationMs(), this.pcmSamples)
     }
 
     /**
@@ -34,15 +42,15 @@ export class Pcm implements IPcm {
      * @param durationMs - sub-fragment duration in ms
      */
     getFragment(startOffsetMs: number, durationMs: number): IPcm{
-        return new Pcm(this.id, name, this.pcmInfo, this.startMs + startOffsetMs, durationMs, this.pcmSamples)
+        return new Pcm(this.id, name, this.format, this.info, this.startMs + startOffsetMs, durationMs, this.pcmSamples)
     }
 
     /**
      * Returns PCM samples as array of Float32.
      */
     getSamples(): Float32Array{
-        const firstSampleIndex = this.startMs * this.pcmInfo.sampleRate * this.pcmInfo.channels;
-        let samplesNum = this.durationMs * this.pcmInfo.sampleRate * this.pcmInfo.channels;
+        const firstSampleIndex = this.startMs * this.format.sampleRate * this.format.channels;
+        let samplesNum = this.durationMs * this.format.sampleRate * this.format.channels;
         if(samplesNum >= this.pcmSamples.length){
             samplesNum = this.pcmSamples.length;
         }
@@ -61,11 +69,11 @@ export class Pcm implements IPcm {
     }
 
     getFullTrackDurationMs(): number{
-        return Pcm.calculateDurationMs(this.pcmSamples.length,this.pcmInfo);
+        return Pcm.calculateDurationMs(this.pcmSamples.length, this.format);
     }
 
-    static calculateDurationMs(samplesNum: number, pcmInfo: IPcmInfo){
-        return samplesNum / pcmInfo.sampleRate / pcmInfo.channels * 1000;
+    static calculateDurationMs(samplesNum: number, format: IPcmFormat){
+        return samplesNum / format.sampleRate / format.channels * 1000;
     }
 
     private pcmSamples: Float32Array;

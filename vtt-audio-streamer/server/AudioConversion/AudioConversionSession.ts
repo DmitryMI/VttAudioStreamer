@@ -1,13 +1,13 @@
 
 import {type AudioConversionSessionId, IAudioConversionSession} from "#shared/AudioConversion/IAudioConversionSession";
-import type {IPcmInfo} from "#shared/Pcm/IPcmInfo";
+import type {IPcmFormat} from "#shared/Pcm/IPcmFormat";
 import type {AudioConverter} from "~~/server/AudioConversion/AudioConverter";
 import {type ChildProcessWithoutNullStreams, spawn} from "node:child_process";
 
 export class AudioConversionSession implements IAudioConversionSession {
     readonly id: AudioConversionSessionId;
 
-    constructor(id: AudioConversionSessionId, parent: AudioConverter, completionCallback: (session: IAudioConversionSession)=>void, data: Uint8Array, sourceMimeType: string, targetPcmInfo: IPcmInfo) {
+    constructor(id: AudioConversionSessionId, parent: AudioConverter, completionCallback: (session: IAudioConversionSession)=>void, data: Uint8Array, sourceMimeType: string, targetPcmInfo: IPcmFormat) {
         this.id = id;
         this.parent = parent;
         this.completionCallback = completionCallback;
@@ -16,7 +16,7 @@ export class AudioConversionSession implements IAudioConversionSession {
 
         const args = [
             "-hide_banner",
-            "-loglevel", "repeat+level+verbose",
+            "-loglevel", "repeat+level+info",
 
             // Input from stdin
             "-i", "pipe:0",
@@ -40,29 +40,39 @@ export class AudioConversionSession implements IAudioConversionSession {
         this.ffmpeg.stderr.setEncoding("utf8");
         this.ffmpeg.stderr.on("data", chunk => {
             console.log(`[ffmpeg:log] ${chunk}`)
-            // Example lines:
-            // time=00:00:03.21 bitrate=...
-            const match = /time=(\d+):(\d+):([\d.]+)/.exec(chunk);
-            if (!match) return;
 
-            const [, hh, mm, ss] = match;
-            const seconds =
-                Number(hh) * 3600 +
-                Number(mm) * 60 +
-                Number(ss);
+            const matchDuration = /Duration: (\d+):(\d+):([\d.]+)/.exec(chunk);
+            if(matchDuration) {
+                const [, hh, mm, ss] = matchDuration;
+                const seconds =
+                    Number(hh) * 3600 +
+                    Number(mm) * 60 +
+                    Number(ss);
+                this.durationMs = seconds * 1000;
+            }
 
-            // You can normalize if duration is known
-            this.progress = seconds;
+            const matchCurrentTime = /time=(\d+):(\d+):([\d.]+)/.exec(chunk);
+            if(matchCurrentTime) {
+
+                const [, hh, mm, ss] = matchCurrentTime;
+                const seconds =
+                    Number(hh) * 3600 +
+                    Number(mm) * 60 +
+                    Number(ss);
+
+                if(this.durationMs > 0) {
+                    this.progress = seconds * 1000 / this.durationMs;
+                    console.log(`[ffmpeg:log] progress=${this.progress}`);
+                }
+                else{
+                    this.progress = 0;
+                }
+            }
         });
 
         this.ffmpeg.stdout.on("data", chunk => {
-            console.log(`[ffmpeg:data] got ${chunk.byteLength} bytes`);
-            if (!this.result) this.result = new Float32Array(0)
             const floatChunk = new Float32Array(chunk.buffer, chunk.byteOffset, chunk.byteLength / 4)
-            const tmp = new Float32Array(this.result.length + floatChunk.length)
-            tmp.set(this.result, 0)
-            tmp.set(floatChunk, this.result.length)
-            this.result = tmp
+            this.chunks.push(floatChunk);
         })
 
         this.ffmpeg.on("exit", (code, signal) => {
@@ -93,7 +103,23 @@ export class AudioConversionSession implements IAudioConversionSession {
     }
 
     getResult(): Float32Array | null{
-        return this.result;
+        if(!this.done){
+            return null;
+        }
+
+        //get the total number of frames on the new float32array
+        const nFrames = this.chunks.reduce((acc, elem) => acc + elem.length, 0)
+
+        //create a new float32 with the correct number of frames
+        const result = new Float32Array(nFrames);
+
+        //insert each chunk into the new float32array
+        let currentFrame =0
+        this.chunks.forEach((chunk)=> {
+            result.set(chunk, currentFrame)
+            currentFrame += chunk.length;
+        });
+        return result;
     }
 
     private parent: AudioConverter;
@@ -102,5 +128,6 @@ export class AudioConversionSession implements IAudioConversionSession {
     private progress: number = 0;
     private done: boolean = false;
     private error: Error | null = null;
-    private result: Float32Array | null = null;
+    private chunks: Float32Array[] = [];
+    private durationMs: number = 0;
 }

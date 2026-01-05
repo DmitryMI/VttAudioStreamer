@@ -1,11 +1,13 @@
 /**
- * PCM information
+ * PCM metadata
  */
 export interface IPcmInfo {
+    fileName: string;
+    durationMs: number;
+    bitrate: number;
 
-    /** Sample rate in Hz (e.g., 48000) */
-    sampleRate: number;
-
-    /** Number of channels (1=mono, 2=stereo) */
-    channels: number;
+    album?: string;
+    artist?: string;
+    date?: string;
+    title?: string;
 }

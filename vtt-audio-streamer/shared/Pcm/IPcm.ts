@@ -1,3 +1,4 @@
+import type {IPcmFormat} from "#shared/Pcm/IPcmFormat";
 import type {IPcmInfo} from "#shared/Pcm/IPcmInfo";
 
 export type PcmId = string & { readonly __brand: "PcmId" };
@@ -11,7 +12,8 @@ export interface IPcm {
      */
     id: PcmId;
     name: string;
-    pcmInfo: IPcmInfo;
+    format: IPcmFormat;
+    info: IPcmInfo;
 
     /**
      * Start timestamp (in ms) of this particular PCM fragment.

@@ -1,4 +1,4 @@
-import type {IPcmInfo} from "#shared/Pcm/IPcmInfo";
+import type {IPcmFormat} from "#shared/Pcm/IPcmFormat";
 import type {AudioConversionSessionId, IAudioConversionSession} from "#shared/AudioConversion/IAudioConversionSession";
 
 /**
@@ -6,7 +6,7 @@ import type {AudioConversionSessionId, IAudioConversionSession} from "#shared/Au
  */
 export interface IAudioConverter {
 
-    createPcmConversionSession(data: Uint8Array, sourceMimeType: string, targetPcmInfo: IPcmInfo, completionCallback: (session: IAudioConversionSession)=>void): IAudioConversionSession;
+    createPcmConversionSession(data: Uint8Array, sourceMimeType: string, targetPcmInfo: IPcmFormat, completionCallback: (session: IAudioConversionSession)=>void): IAudioConversionSession;
 
-    getSessionById(id: AudioConversionSessionId): IAudioConversionSession | null;
+    getAudioConversionSessionById(id: AudioConversionSessionId): IAudioConversionSession | null;
 }
